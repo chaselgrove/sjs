@@ -1,0 +1,36 @@
+#!/usr/bin/python
+
+# See file COPYING distributed with sjs for copyright and license.
+
+import sys
+import os
+import sjs
+
+progname = os.path.basename(sys.argv[0])
+
+if len(sys.argv) != 2:
+    print 'usage: %s <job ID>' % progname
+    sys.exit(1)
+
+try:
+    job_id = int(sys.argv[1])
+except:
+    msg = 'error: ERROR! "%s" is an invalid job-task identifier\n' % sys.argv[1]
+    sys.stderr.write(msg)
+    sys.exit(1)
+
+cluster = sjs.Cluster()
+
+try:
+    job = cluster.get_job(job_id)
+except KeyError:
+    print 'denied: job "%d" does not exist' % job_id
+    sys.exit(1)
+
+job.delete()
+
+print '%s has deleted job %d' % (os.getlogin(), job.id)
+
+sys.exit(0)
+
+# eof

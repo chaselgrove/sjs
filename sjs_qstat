@@ -1,0 +1,40 @@
+#!/usr/bin/python
+
+# See file COPYING distributed with sjs for copyright and license.
+
+import sys
+import os
+import sjs
+
+progname = os.path.basename(sys.argv[0])
+
+cluster = sjs.Cluster()
+
+jobs = cluster.get_all_jobs()
+
+if not jobs:
+    sys.exit(0)
+
+print 'job-ID  prior   name       user         state submit/start at     queue                          slots ja-task-ID'
+print '-----------------------------------------------------------------------------------------------------------------'
+
+fmt = '%7d 0.00000 %-10s %-12s %-5s %s %-30s     1           '
+for job in jobs:
+    name = job.name[:10]
+    user = job.user[:12]
+    if job.is_running():
+        state = 'r'
+        t = job.t_start.strftime('%m/%d/%Y %H:%M:%S')
+        queue = 'all.q@localhost'
+    else:
+        if job.error_flag:
+            state = 'Eqw'
+        else:
+            state = 'qw'
+        t = job.t_submit.strftime('%m/%d/%Y %H:%M:%S')
+        queue = ''
+    print fmt % (job.id, name, user, state, t, queue)
+
+sys.exit(0)
+
+# eof

@@ -1,0 +1,16 @@
+#!/usr/bin/python
+
+# See file COPYING distributed with sjs for copyright and license.
+
+import sys
+import os
+import sjs
+
+progname = os.path.basename(sys.argv[0])
+
+cluster = sjs.Cluster()
+cluster.start_runner()
+
+sys.exit(0)
+
+# eof

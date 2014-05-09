@@ -1,0 +1,109 @@
+#!/usr/bin/python
+
+# See file COPYING distributed with sjs for copyright and license.
+
+import sys
+import os
+import getopt
+import sjs
+
+def parse_opts(argv):
+
+    """parse options in the passed list
+
+    the qsub command line and the options that can be declared by #$ in the 
+    job script are the same, so we abstract out the parsing here
+    """
+
+    try:
+        (opts, args) = getopt.getopt(argv, option_string)
+    except getopt.error, data:
+        if argv is sys.argv:
+            sys.stderr.write('%s: %s\n' % (progname, str(data)))
+        else:
+            sys.stderr.write('%s: in script: %s\n' % (progname, str(data)))
+        return None
+
+    for (option, value) in opts:
+        if option == '-@':
+            if argv is sys.argv:
+                cluster.log('qsub: ignoring "-@ %s"' % value)
+            else:
+                cluster.log('qsub: ignoring "-@ %s" in script' % value)
+        if option == '-a':
+            if argv is sys.argv:
+                cluster.log('qsub: ignoring "-a %s"' % value)
+            else:
+                cluster.log('qsub: ignoring "-a %s" in script' % value)
+        if option == '-o':
+            options['stdout'] = value
+        if option == '-e':
+            options['stderr'] = value
+        if option == '-S':
+            options['shell'] = value
+        if option == '-V':
+            if argv is sys.argv:
+                cluster.log('qsub: ignoring "-V %s"' % value)
+            else:
+                cluster.log('qsub: ignoring "-V %s" in script' % value)
+
+    return args
+
+progname = os.path.basename(sys.argv.pop(0))
+
+option_string = 'o:e:V@:a:S:'
+
+options = {'stdout': '$HOME/$JOB_NAME.o$JOB_ID', 
+           'stderr': '$HOME/$JOB_NAME.e$JOB_ID', 
+           'shell': '/bin/csh'}
+
+try:
+    cluster = sjs.Cluster()
+except sjs.SJSError, data:
+    sys.stderr.write('%s: %s\n' % (progname, str(data)))
+    sys.exit(1)
+
+args = parse_opts(sys.argv)
+if args is None:
+    sys.exit(1)
+
+if not args:
+    cluster.log('qsub reading from stdin')
+    job_name = 'STDIN'
+    script = sys.stdin.read()
+    script_args = []
+else:
+    cluster.log('qsub reading from %s' % args[0])
+    job_name = os.path.basename(args[0])
+    script = open(args[0]).read()
+    script_args = args[1:]
+
+script_argv = []
+for line in script.split('\n'):
+    line = line.strip()
+    if not line.startswith('#$'):
+        continue
+    script_argv.extend(line[2:].strip().split())
+script_opts = parse_opts(script_argv)
+if script_opts is None:
+    sys.exit(1)
+if script_opts:
+    msg = '%s: in script: option %s not recognized\n' % (progname, 
+                                                         script_opts[0])
+    sys.stderr.write(msg)
+    sys.exit(1)
+
+job = cluster.submit(job_name, 
+                     options['shell'], 
+                     script, 
+                     script_args, 
+                     options['stdout'], 
+                     options['stderr'])
+
+print 'Your job %d ("%s") has been submitted' % (job.id, job.name)
+
+cluster.start_runner()
+
+sys.exit(0)
+
+# eof

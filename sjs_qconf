@@ -1,0 +1,117 @@
+#!/usr/bin/python
+
+# See file COPYING distributed with sjs for copyright and license.
+
+import sys
+import os
+import sqlite3
+
+create_job_table_sql =  """
+    CREATE TABLE job (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      user TEXT NOT NULL,
+                      name TEXT NOT NULL,
+                      shell TEXT NOT NULL,
+                      script TEXT NOT NULL,
+                      error_flag BOOLEAN NOT NULL, 
+                      stdout TEXT NOT NULL,
+                      stderr TEXT NOT NULL,
+                      t_submit DATETIME NOT NULL,
+                      t_start DATETIME DEFAULT NULL,
+                      pid INTEGER DEFAULT NULL)
+"""
+
+create_argument_table_sql = """
+    CREATE TABLE argument (job_id INTEGER NOT NULL REFERENCES job,
+                           ordinal INTEGER NOT NULL, 
+                           argument TEXT NOT NULL)
+"""
+
+progname = os.path.basename(sys.argv.pop(0))
+
+if len(sys.argv) == 0:
+    print
+    print 'usage: qconf <command> [command arguments]'
+    print
+    print 'commands and arguments are:'
+    print
+    print '    init [n_slots] -- initialize a cluster in SJS_ROOT'
+    print '                      nslots defaults to 1'
+    print
+    print '    slots [n_slots] -- show or set the number of slots'
+    print
+    if not 'SJS_ROOT' in os.environ:
+        print
+        print 'Warning: SJS_ROOT is not set.'
+    print
+    sys.exit(1)
+
+command = sys.argv.pop(0)
+
+if command not in ('init', 'slots'):
+    sys.stderr.write('%s: unknown command "%s"\n' % (progname, command))
+    sys.exit(1)
+
+if not 'SJS_ROOT' in os.environ:
+    sys.stderr.write('%s: SJS_ROOT not defined\n' % progname)
+    sys.exit(1)
+
+sjs_root = os.environ['SJS_ROOT']
+
+if command == 'init':
+    if os.path.exists(sjs_root):
+        sys.stderr.write('%s: %s exists\n' % (sjs_root, progname))
+        sys.exit(1)
+    os.mkdir(sjs_root)
+    db_fname = os.path.join(sjs_root, 'db.sqlite')
+    slots_fname = os.path.join(sjs_root, 'slots')
+    if sys.argv:
+        try:
+            n_slots = int(sys.argv[0])
+            assert n_slots > 0
+        except:
+            msg = '%s: bad number of slots "%s"\n' % (progname, sys.argv[0])
+            sys.stderr.write(msg)
+            sys.exit(1)
+    else:
+        n_slots = 1
+    db = sqlite3.connect(db_fname)
+    c = db.cursor()
+    c.execute(create_job_table_sql)
+    c.execute(create_argument_table_sql)
+    c.close()
+    db.commit()
+    db.close()
+    open(slots_fname, 'w').write('%d\n' % n_slots)
+    open(os.path.join(sjs_root, 'log'), 'w')
+    open(os.path.join(sjs_root, 'qrun.stdout'), 'w')
+    open(os.path.join(sjs_root, 'qrun.stderr'), 'w')
+    os.mkdir(os.path.join(sjs_root, 'spool'))
+
+if command == 'slots':
+    slots_fname = os.path.join(sjs_root, 'slots')
+    if not os.path.exists(slots_fname):
+        sys.stderr.write('%s: %s does not exist\n' % (progname, slots_fname))
+        sys.exit(1)
+    if sys.argv:
+        try:
+            n_slots = int(sys.argv[0])
+            assert n_slots > 0
+        except:
+            msg = '%s: bad number of slots "%s"\n' % (progname, sys.argv[0])
+            sys.stderr.write(msg)
+            sys.exit(1)
+        open(slots_fname, 'w').write('%d\n' % n_slots)
+    else:
+        n_slots_str = open(slots_fname).read().rstrip('\n')
+        try:
+            n_slots = int(n_slots_str)
+            assert n_slots > 0
+        except:
+            msg = '%s: bad number of slots "%s"\n' % (progname, n_slots_str)
+            sys.stderr.write(msg)
+            sys.exit(1)
+        print n_slots
+
+sys.exit(0)
+
+# eof
