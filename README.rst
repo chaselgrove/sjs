@@ -22,7 +22,3 @@ The number of slots can be changed using ``sjs_qconf slots``:
 Jobs can be submitted and deleted using ``sjs_qsub`` and ``sjs_qdel`` as you would with ``qsub`` and ``qdel``, respectively, and a list of pending and running jobs can be displayed with ``sjs_qstat``.
 
 For complete SGE emulation, link to the sjs_* scripts using the SGE names from somewhere in your path (e.g. ``/usr/local/bin/sjs_qsub`` -> ``/usr/bin/qsub``).
-
-Dependencies
-============
-
