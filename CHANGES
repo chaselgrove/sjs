@@ -1,0 +1,11 @@
+0.1.0 -- 9 May 2014
+
+    Initial version.
+
+0.1.1 -- 12 May 2014
+
+    Added sjs module to package.
+
+0.1.2 -- 13 May 2014
+
+    Fixed error message in qconf.
