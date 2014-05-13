@@ -59,7 +59,7 @@ sjs_root = os.environ['SJS_ROOT']
 
 if command == 'init':
     if os.path.exists(sjs_root):
-        sys.stderr.write('%s: %s exists\n' % (sjs_root, progname))
+        sys.stderr.write('%s: %s exists\n' % (progname, sjs_root))
         sys.exit(1)
     os.mkdir(sjs_root)
     db_fname = os.path.join(sjs_root, 'db.sqlite')
