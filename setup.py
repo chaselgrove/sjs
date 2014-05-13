@@ -7,7 +7,7 @@ from distutils.core import setup
 long_description = open('README.rst').read()
 
 setup(name='sjs', 
-      version='0.1.1', 
+      version='0.1.2', 
       description='A simple job scheduler', 
       author='Christian Haselgrove', 
       author_email='christian.haselgrove@umassmed.edu', 

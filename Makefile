@@ -2,9 +2,9 @@
 
 default : build
 
-build : dist/sjs-0.1.1.tar.gz
+build : dist/sjs-0.1.2.tar.gz
 
-dist/sjs-0.1.1.tar.gz : 
+dist/sjs-0.1.2.tar.gz : 
 	python setup.py sdist
 
 register : 
